@@ -1,0 +1,21 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /uploads/{serverId}/{channelId}/{uid}/{fileName} {
+      // Qualquer usuário autenticado pode ler arquivos; restrinja por membro
+      // do servidor com backend/estrutura de autorização antes de produção.
+      allow read: if request.auth != null;
+      allow create: if request.auth != null &&
+        request.auth.uid == uid &&
+        request.resource.size < 8 * 1024 * 1024 &&
+        request.resource.contentType.matches('(image/.*|application/pdf|text/plain)');
+      allow update, delete: if request.auth != null && request.auth.uid == uid;
+    }
+    match /avatars/{uid}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid &&
+        request.resource.size < 3 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+    }
+  }
+}

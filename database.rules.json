@@ -1,0 +1,50 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        "profile": {
+          ".read": "auth != null",
+          ".write": "auth != null && auth.uid === $uid"
+        }
+      }
+    },
+    "presence": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "servers": {
+      "$sid": {
+        ".read": "auth != null && data.child('members').child(auth.uid).exists()",
+        ".write": "auth != null && ((!data.exists() && newData.child('ownerId').val() === auth.uid && newData.child('members').child(auth.uid).child('role').val() === 'owner') || (data.child('members').child(auth.uid).child('role').val() === 'owner' && newData.child('ownerId').val() === data.child('ownerId').val()) || (data.child('members').child(auth.uid).child('role').val() === 'admin' && newData.child('ownerId').val() === data.child('ownerId').val() && newData.child('members').val() === data.child('members').val()))"
+      }
+    },
+    "userServers": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$sid": {
+          ".write": "auth != null && auth.uid === $uid && ((!data.exists() && root.child('servers').child($sid).child('members').child(auth.uid).exists()) || (!newData.exists() && root.child('servers').child($sid).child('ownerId').val() !== auth.uid))"
+        }
+      }
+    },
+    "messages": {
+      "$sid": {
+        "$cid": {
+          ".read": "auth != null && root.child('servers').child($sid).child('members').child(auth.uid).exists()",
+          "$mid": {
+            ".write": "auth != null && root.child('servers').child($sid).child('members').child(auth.uid).exists() && ((!data.exists() && newData.child('uid').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length <= 4000) || (data.child('uid').val() === auth.uid && !newData.exists()))"
+          }
+        }
+      }
+    },
+    "callSignals": {
+      "$room": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    }
+  }
+}
